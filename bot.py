@@ -34,7 +34,34 @@ async def get_my_score(ctx):
     await ctx.send(file=discord.File(tmp_file.name))
     tmp_file.close()
 
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def add_image(ctx):
+    if not ctx.message.attachments:
+        await ctx.send("Lütfen bir resim dosyası ekleyin!")
+        return
+    
+    attachment = ctx.message.attachments[0]
+    file_name = attachment.filename
+    
+    # Kaydetme
+    try:
+        file_path = f'img/{file_name}'
+        await attachment.save(file_path)
+        
+        # hidden_img versiyonunu oluştur
+        from logic import hide_img
+        hide_img(file_name)
+        
+        # Database'e ekle
+        manager.add_prize([(file_name,)])
+        
+        await ctx.send(f"{file_name} başarıyla eklendi ve gizlendi!")
+        
+    except Exception as e:
+        await ctx.send(f"Resim eklenemedi! Hata: {e}")
 
+ 
 @bot.command()
 async def rating(ctx):
     users = manager.get_rating()  
