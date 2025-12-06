@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands, tasks
-from logic import DatabaseManager, hide_img
+from logic import DatabaseManager, hide_img, create_collage
 from config import TOKEN, DATABASE
 
 intents = discord.Intents.all()
@@ -17,6 +17,23 @@ async def start(ctx):
     else:
         manager.add_user(user_id, ctx.author.name)
         await ctx.send("Kaydoldunuz! Resimler düzenli olarak gönderilecek.")
+
+@bot.command()
+async def get_my_score(ctx):
+    user_id = ctx.author.id
+    import os, cv2, numpy as np, tempfile
+    winners = manager.get_winners_img(user_id)
+    all_imgs = os.listdir('img')
+    paths = [f'img/{i}' if i in winners else f'hidden_img/{i}' for i in all_imgs]
+    collage = create_collage(paths)
+    if collage is None:
+        await ctx.send("Henüz resim yok!")
+        return
+    tmp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+    cv2.imwrite(tmp_file.name, collage)
+    await ctx.send(file=discord.File(tmp_file.name))
+    tmp_file.close()
+
 
 @bot.command()
 async def rating(ctx):

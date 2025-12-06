@@ -63,7 +63,31 @@ class DatabaseManager:
                 conn.commit()
                 return 1
 
-  
+    # DatabaseManager içine ekle
+def get_winners_img(self, user_id):
+    conn = sqlite3.connect(self.database)
+    with conn:
+        cur = conn.cursor()
+        cur.execute('''
+        SELECT image FROM winners 
+        INNER JOIN prizes ON winners.prize_id = prizes.prize_id
+        WHERE user_id = ?''', (user_id,))
+        return [x[0] for x in cur.fetchall()]
+
+def create_collage(image_paths):
+    import cv2, numpy as np
+    images = [cv2.imread(p) for p in image_paths]
+    if not images: return None
+    num_cols = int(len(images)**0.5)
+    num_rows = -(-len(images)//num_cols)
+    h, w = images[0].shape[:2]
+    collage = np.zeros((num_rows*h, num_cols*w,3), np.uint8)
+    for i,img in enumerate(images):
+        r,c = divmod(i,num_cols)
+        collage[r*h:(r+1)*h, c*w:(c+1)*w] = img
+    return collage
+
+
     def mark_prize_used(self, prize_id):
         conn = sqlite3.connect(self.database)
         with conn:
